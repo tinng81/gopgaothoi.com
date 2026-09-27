@@ -87,3 +87,9 @@ Submissions land in a local D1 replica; production is untouched.
 Pages → project → Custom domains → add `gopgaothoi.com` (and `www`),
 following Cloudflare's DNS prompts. Functions (`/api/*`) work identically on
 the custom domain and on `<project-name>.pages.dev`.
+
+## Status
+
+- 2026-09-27: pipeline live — D1 `rsvp-db` (remote), bindings via
+  `wrangler.toml` (config-as-code), deploy command `npx wrangler pages deploy`.
+  `/api/rsvp` + `/api/wish` verified end-to-end against production.
