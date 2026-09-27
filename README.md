@@ -63,14 +63,19 @@ curl -H "x-admin-key: $KEY" "$BASE/api/wish?work=53&format=csv" -o wishes.csv
 
 ## Updating site content
 
-In the luban-h5 repo, regenerate and copy over:
+One-shot script — builds the export in the luban-h5 repo, syncs `site/`,
+commits and pushes (CI deploys automatically):
 
 ```bash
-node scripts/build-site.mjs <workId> --api-base https://<strapi-host>
-rm -rf site && cp -R /path/to/luban-h5/site .
-git add site && git commit -m "chore: refresh site export" && git push
+./deploy.sh                       # work 53, Strapi at http://localhost:1337
+./deploy.sh 53 http://localhost:1337   # explicit form
+REBUILD_ENGINE=1 ./deploy.sh      # also rebuild the engine bundle first
+                                  # (only needed after plugin-code changes)
 ```
 
+Manual equivalent: in luban-h5 run `node scripts/build-site.mjs 53`, then
+`rsync -a --delete site/ <this-repo>/site/` — the build script **merges**, so
+`--delete` prevents orphaned media from piling up — then commit and push.
 `functions/` and `schema.sql` rarely change.
 
 ## Local development
