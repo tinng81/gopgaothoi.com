@@ -1,0 +1,26 @@
+/*
+ * luban 动画词汇表里存在、但 animate.css（3.x 编辑器 / 4.x 引擎）都没有的
+ * 补充 keyframes。编辑器 (core/index.js) 与发布引擎 (engine.ejs) 都加载本文件。
+ * Supplementary keyframes for names in luban's animation vocabulary that
+ * animate.css (3.x editor / 4.x engine) does not provide. Loaded by both the
+ * editor (core/index.js) and the published engine (engine.ejs).
+ */
+
+/* 旋转：绕中心匀速自转，duration = 一圈周期；配合 infinite 做持续旋转
+   Spin: continuous rotation around the center, duration = one revolution;
+   pair with infinite for an endless spin */
+@keyframes justRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* animate.css 3.x 约定（编辑器 mixin 直接用 animation-name，仅 keyframes 必需；
+   类名约定一并提供以兼容 v3 用法） */
+/* animate.css 3.x convention (the editor mixin sets animation-name directly,
+   so only the keyframes are required; classes kept for v3-style usage) */
+.justRotate { animation-name: justRotate; }
+
+/* animate.css 4.x 约定（发布引擎 swiper-animation 按类名 + .animate__animated） */
+/* animate.css 4.x convention (the published engine's swiper-animation plays
+   by class name alongside .animate__animated) */
+.animate__justRotate { animation-name: justRotate; }

@@ -1,0 +1,19 @@
+# Cloudflare Pages 配置 / configuration — git 集成在每次 push 时读取并应用。
+# Read by the Cloudflare Pages git integration on every push; the repo owns
+# the project's bindings (project name, output dir, D1 binding).
+name = "gopgaothoi-com"
+compatibility_date = "2026-09-01"
+pages_build_output_dir = "site"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "rsvp-db"
+database_id = "81423e66-20e4-4776-b940-979dfd2dcb14"
+
+[vars]
+# ADMIN_KEY 是机密（读取提交记录用的管理密钥），不要写在这里。通过
+#   npx wrangler pages secret put ADMIN_KEY --project-name=gopgaothoi-com
+# 或 Dashboard → Settings → Variables → Encrypt 设置。
+# ADMIN_KEY is a secret (admin key for reading submissions) — never put it
+# here. Set it encrypted via `wrangler pages secret put ADMIN_KEY` or
+# Dashboard → Settings → Variables → Encrypt.
