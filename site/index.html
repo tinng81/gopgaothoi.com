@@ -68,7 +68,7 @@
   
   
   
-  <script src="/engine-assets/engine.umd.min.js?v=1790466068947"></script>
+  <script src="/engine-assets/engine.umd.min.js?v=1790477266275"></script>
   
   
   
@@ -85,189 +85,90 @@
   <link rel="preload" as="font" type="font/woff2" href="/engine-assets/vendor/fonts/bevietnampro-400-latin.woff2" crossorigin>
   
   <style>
+    * {
+      outline: none;
+    }
     /* 移动端长页：禁止横向拖动（装饰元素可能超出画布宽度产生空白条） */
     /* mobile long pages: forbid horizontal panning when decorative elements bleed past the canvas */
     html, body { overflow-x: hidden; }
     /* iOS Safari 顶部/底部橡皮筋回弹会让整个画布跟着晃动，禁用之 */
     /* iOS Safari rubber-band overscroll shifts the whole canvas — disable it */
     html, body { overscroll-behavior-y: none; }
+
     /*
-      scss 文件，用来生成下面一段 style 中的 css
-      css 在线转 css：https://www.sassmeister.com/
+      页面只有 #app 一个节点；移动端与桌面端都直接展示画布本身。
+      the body holds a single #app node; both mobile and desktop show the bare canvas
     */
-    /* * {
-      outline: none;
+    body.mobile {
+      margin: 0;
     }
-
-    .bg-wrapper {
-      width: 100%;
-      height: 100%;
-      background-image: linear-gradient(to top, #fff1eb 0%, #ace0f9 100%);
-    }
-
-    .preview-wrapper {
-      position: relative;
-      display: flex;
-      flex-wrap: nowrap;
-      width: 375px;
-      height: 568px;
-
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-
-      .phone-wrapper {
-        position: absolute;
-        width: 375px;
-        height: 568px;
-        display: inline-block;
-        background: #fff;
-        box-sizing: content-box;
-        border: 10px solid #f6f6f6;
-      }
-
-      .float-shortcuts {
-        position: absolute;
-        top: 100px;
-        right: 0;
-
-        .page-controller {
-          position: absolute;
-          left: 0 !important;
-          display: block;
-          box-sizing: border-box;
-          width: 22px;
-          height: 60px;
-          padding: 4px;
-          border-top-right-radius: 5px;
-          border-bottom-right-radius: 5px;
-
-          cursor: pointer;
-          background: #2096f9;
-          font-size: 12px;
-          border: 1px solid #2096f9;
-          color: #fff;
-
-          &.next {
-            top: 80px;
-          }
-        }
-      }
-
-      .work-info {
-        color: #4a4a4a;
-        font-size: 14px;
-        margin-left: 380px;
-
-        .qrcode-wrapper {
-          .qrcode-label {
-          }
-
-          .qrcode-img {
-          }
-        }
-      }
-    } */
-  </style>
-  <style>
-    * {
-      outline: none;
-    }
-
-    .bg-wrapper {
-      width: 100%;
-      height: 100%;
-      background-image: linear-gradient(to top, #fff1eb 0%, #ace0f9 100%);
-    }
-    /* .swiper-container {
-      width: 100%;
+    /*
+      桌面端："手机相框"展示——渐变背景上一台居中的手机（深色圆角边框 + 灵动岛），
+      画布即屏幕；长页在手机内部滚动（桌面页本身不再滚动），滚轮/键盘统一转发进屏幕
+      desktop: "phone frame" presentation — a centered phone (dark rounded bezel +
+      dynamic-island pill) on a soft gradient, canvas as its screen; long pages scroll
+      INSIDE the phone (the desktop page itself never scrolls) via wheel/keyboard bridge
+    */
+    body.desktop-stage {
+      margin: 0;
       height: 100vh;
-    } */
-
-    .preview-wrapper {
-      position: relative;
+      overflow: hidden;
       display: flex;
-      flex-wrap: nowrap;
-      width: 375px;
-      height: 568px;
-      /* position: absolute;
-      left: 0;
-      top: 0;
-      right: 0;
-      bottom: 0;
-      margin: auto; */
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(160deg, #fbe4e6 0%, #f6eef4 45%, #e8eef5 100%);
     }
-    .preview-wrapper .phone-wrapper {
-      position: absolute;
-      width: 375px;
-      height: 568px;
-      display: inline-block;
-      background: #fff;
+    .phone-shell {
+      position: relative;
       box-sizing: content-box;
-      border: 10px solid #f6f6f6;
+      background: #111114;
+      border-radius: 44px;
+      padding: 12px;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35), 0 4px 16px rgba(0, 0, 0, 0.18);
     }
-    .preview-wrapper .float-shortcuts {
-      position: absolute;
-      top: 100px;
-      right: 0;
-    }
-    .preview-wrapper .float-shortcuts .page-controller {
-      position: absolute;
-      left: 0 !important;
+    .phone-shell #app {
       display: block;
-      box-sizing: border-box;
-      width: 22px;
-      height: 60px;
-      padding: 4px;
-      border-top-right-radius: 5px;
-      border-bottom-right-radius: 5px;
-      cursor: pointer;
-      background: #2096f9;
-      font-size: 12px;
-      /* border: 1px solid #2096f9; */
-      color: #fff;
+      background: #fff;
+      border-radius: 32px;
+      overflow: hidden;
     }
-    .preview-wrapper .float-shortcuts .page-controller.next {
-      top: 80px;
+    body.desktop-stage.long #app {
+      overflow: hidden;
     }
-    .preview-wrapper .work-info {
-      color: #4a4a4a;
-      font-size: 14px;
-      margin-left: 380px;
+    /* 引擎把长页滚动容器设为 #work-container（inline overflow-y: scroll），
+       隐藏其滚动条、避免滚动链 / the engine scrolls long pages via #work-container
+       (inline overflow-y: scroll) — hide its scrollbar, contain scroll chaining */
+    body.desktop-stage.long #work-container {
+      overscroll-behavior: contain;
+      scrollbar-width: none;         /* iPhone 屏幕没有滚动条 / phones show no scrollbar */
     }
-
+    body.desktop-stage.long #work-container::-webkit-scrollbar {
+      display: none;
+    }
+    .phone-island {
+      position: absolute;
+      top: 24px;                     /* 12px bezel + 12px inset */
+      left: 50%;
+      transform: translateX(-50%);
+      width: 104px;
+      height: 26px;
+      border-radius: 13px;
+      background: #111114;
+      z-index: 10;
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
-  <div class="bg-wrapper"></div>
-  <div class="preview-wrapper">
-    <div class="phone-wrapper">
-      <div class="float-shortcuts">
-        <a class="page-controller swiper-button-prev prev">上一页</a>
-        <a class="page-controller swiper-button-next next">下一页</a>
-      </div>
-      <div id="app">
-        <engine />
-      </div>
-    </div>
-    <div class="work-info">
-      <div class="qrcode-wrapper">
-        <div class="qrcode-label">
-          <span>手机扫码分享给好友</span>
-        </div>
-        <div class="qrcode-img">
-          <canvas style="float: left" id="qrcode-canvas"></canvas>
-        </div>
-      </div>
-    </div>
+  <div id="app">
+    <engine />
   </div>
   <script>
     !function () {
+      var WORK_WIDTH = 375;
+      var WORK_HEIGHT = 7350;
+      var IS_LONG_PAGE = true;
+
       function isMobile() {
         var mobileDeviceReg = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobi/i
         return mobileDeviceReg.test(navigator.userAgent) || window.innerWidth < 500
@@ -276,45 +177,110 @@
       function updateViewport() {
         var scale = 1;
         var w = document.documentElement.clientWidth || 375;
-        // var h = document.documentElement.clientHeight || 568;
-        // scale = w/h >= 375/568 ? h/568 : w/375;
         scale = w/375;
         var viewport = "width=375, initial-scale=" + scale + ", maximum-scale=" + scale + ", user-scalable=no";
         document.getElementById("viewport").setAttribute("content", viewport)
       }
 
-      function doMobileActions () {
-        updateViewport();
-        var app = document.getElementById('app');
-        document.body.innerHTML = '';
-        document.body.appendChild(app);
-        // 回弹/超界滚动露出的是 body 背景：用第一页的主题色兜底，避免晃出白底
-        // overscroll reveals the body background — paint it with the first
-        // page's theme color so any residual bounce never flashes white
+      // 回弹/超界滚动露出的是 body 背景：移动端用第一页的主题色兜底；作品没设主题色时
+      // 用中性浅灰，避免透明 body 在深色模式浏览器里露出黑底
+      // overscroll reveals the body background — paint it with the first page's theme
+      // color, falling back to a neutral light gray so dark-mode browsers (transparent
+      // body) never flash black around the canvas
+      function setBodyBackground() {
         var pages = (window.__work && window.__work.pages) || [];
         var bg = pages[0] && pages[0].bgColor;
-        if (bg) document.body.style.background = bg;
+        document.body.style.background = bg || '#f3f4f6';
       }
 
-      var loadJS = function (url, callback, location) {
-        location = location || document.head
-
-        var scriptTag = document.createElement('script');
-        scriptTag.onload = callback;
-        // scriptTag.onreadystatechange = callback;
-        scriptTag.src = url;
-        location.appendChild(scriptTag);
-      };
-
-      function drawQRcode () {
-        var canvas = document.getElementById('qrcode-canvas')
-        QRCode.toCanvas(canvas, window.location.href, {
-          scale: 4
-        })
+      // #!zh: 移动端：全屏铺满。视口缩放后画布宽即为设备宽，多余装饰节点直接剥离
+      // #!en: mobile: full-bleed. After the viewport scaling the canvas width equals
+      //       the device width; decorative wrappers are stripped entirely
+      function doMobileActions () {
+        updateViewport();
+        document.body.className = 'mobile';
+        setBodyBackground();
       }
 
-      function doPCActions() {
-        loadJS('/engine-assets/vendor/qrcode.min.js', drawQRcode);
+      // #!zh: 桌面端："手机相框"展示。渐变背景上居中一台手机（深色圆角边框 + 灵动岛），
+      //       画布即屏幕：长页在屏幕内部滚动（页面本身不动，滚轮/键盘在任意位置都
+      //       转发给屏幕），翻页作品整台手机缩放到适应视口高度
+      // #!en: desktop: "phone frame" presentation. A phone (dark rounded bezel +
+      //       dynamic-island pill) centered on a soft gradient with the canvas as its
+      //       screen: long pages scroll INSIDE the screen (the page itself never moves;
+      //       wheel/keyboard anywhere are forwarded to it), while flipbook works scale
+      //       the whole phone to fit the viewport height
+      function doPCActions () {
+        var app = document.getElementById('app');
+        app.style.width = WORK_WIDTH + 'px';
+
+        // 把 #app 包进手机外壳，加上灵动岛 / wrap #app in the phone shell + island
+        var shell = document.createElement('div');
+        shell.className = 'phone-shell';
+        app.parentNode.insertBefore(shell, app);
+        shell.appendChild(app);
+        var island = document.createElement('div');
+        island.className = 'phone-island';
+        shell.appendChild(island);
+
+        var pages = (window.__work && window.__work.pages) || [];
+        var bg = pages[0] && pages[0].bgColor;
+        // 主题色渐变背景；没有主题色则用样式表里的默认渐变
+        // gradient tinted with the theme color; the stylesheet's default gradient otherwise
+        if (bg) document.body.style.background = 'linear-gradient(160deg, ' + bg + ' 0%, #f3f4f6 100%)';
+
+        function bridgeScrolling () {
+          // 引擎挂载后，长页真正的滚动容器是 #work-container（engine-entry 里
+          // overflow-y: scroll），挂载前它还不存在——所以事件触发时再取
+          // after mount the real long-page scroller is #work-container (overflow-y:
+          // scroll in engine-entry); it doesn't exist before Vue mounts, so resolve
+          // it at event time
+          var getScroller = function () {
+            return document.getElementById('work-container') || app
+          }
+          // 鼠标在手机外时，滚轮/键盘也要滚到屏幕里；在手机内则交给原生滚动
+          // wheel/keyboard outside the phone still scrolls the screen; native
+          // scrolling takes over when the cursor is already inside it
+          window.addEventListener('wheel', function (e) {
+            var scroller = getScroller()
+            if (!scroller || scroller.contains(e.target)) return
+            scroller.scrollTop += e.deltaY
+          }, { passive: true })
+          window.addEventListener('keydown', function (e) {
+            var step = { ArrowDown: 64, ArrowUp: -64, PageDown: 320, PageUp: -320, ' ': e.shiftKey ? -320 : 320 }[e.key]
+            if (!step) return
+            var scroller = getScroller()
+            if (scroller) scroller.scrollTop += step
+          })
+        }
+
+        if (IS_LONG_PAGE) {
+          document.body.className = 'desktop-stage long';
+          // 屏幕高度：iPhone 比例（约 1:2.16）与视口取小者，窗口变化时重算
+          // screen height: iPhone aspect (~1:2.16) capped by the viewport, recomputed on resize
+          var fit = function () {
+            app.style.height = Math.max(480, Math.min(WORK_WIDTH * 2.165, window.innerHeight - 96)) + 'px';
+          };
+          fit();
+          window.addEventListener('resize', fit);
+          bridgeScrolling();
+        } else {
+          document.body.className = 'desktop-stage';
+          app.style.height = WORK_HEIGHT + 'px';
+          // 翻页作品：整台手机（含边框）缩放到适应视口
+          // flipbook: scale the whole phone (bezel included) to fit the viewport
+          var SHELL_PAD = 12;
+          var fitFlipbook = function () {
+            var scale = Math.min(
+              (window.innerHeight - 48) / (WORK_HEIGHT + SHELL_PAD * 2),
+              (window.innerWidth - 48) / (WORK_WIDTH + SHELL_PAD * 2),
+              2
+            );
+            shell.style.transform = 'scale(' + Math.max(scale, 0.3) + ')';
+          };
+          fitFlipbook();
+          window.addEventListener('resize', fitFlipbook);
+        }
       }
 
       isMobile() ? doMobileActions() : doPCActions();
