@@ -10,7 +10,7 @@ at runtime. Live at https://gopgaothoi-com.pages.dev.
 | `site/` | Static export of the invitation (index.html + engine assets + uploads). Built with luban-h5 `scripts/build-site.mjs`. |
 | `functions/api/rsvp.js` | `POST /api/rsvp` submit · `GET /api/rsvp?work=<id>&format=json\|csv` (admin) |
 | `functions/api/wish.js` | `POST /api/wish` submit · `GET /api/wish?work=<id>&format=json\|csv` (admin) |
-| `schema.sql` | D1 tables `rsvps` + `wishes` (+ indexes) |
+| `schema.sql` | D1 tables `rsvps` + `wishes` (+ indexes, incl. `ip` used for rate limiting) |
 | `wrangler.toml` | Config-as-code: project name, output dir, D1 binding (`DB` → `rsvp-db`). Applied on every push. |
 
 Every push to `main` triggers a Cloudflare Pages build. There is nothing to
@@ -20,6 +20,13 @@ compile: build command stays **empty**, output directory is **`site`**, and
 
 KV is intentionally not used — D1 covers both RSVP and wishes (relational
 rows + CSV export).
+
+**Anti-spam:** the submit endpoints rate-limit per IP directly against D1
+(no extra service): 10 submissions/hour and 50/day per `CF-Connecting-IP`
+(deliberately generous — a household behind one NAT IP fits comfortably;
+it only stops people hammering the form, not determined bots). Over the
+limit returns `429` and the page shows the generic "submit failed" toast.
+Guests see nothing different in normal use.
 
 ## One-time wiring (D1)
 

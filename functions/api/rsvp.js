@@ -15,6 +15,34 @@
 const MAX_BODY_BYTES = 16 * 1024
 const MAX_VALUE_CHARS = 2000
 
+// #!zh: 基于 D1 的按 IP 限流（与 wish.js 共用同一套窗口）。IP 取 CF-Connecting-IP
+//       （Cloudflare 注入，客户端伪造不了）；本地 `wrangler pages dev` 没有该头，
+//       所有请求共用 'unknown' 桶，反而方便本地验证 429。窗口故意宽松——NAT 家庭
+//       多人共用一个 IP 也足够提交，只挡"手动发太多次"的非技术人员，不是反机器人。
+//       计数按 IP 全局（不按 work），同一 D1 上的多份请柬共享额度。
+// #!en: D1-based per-IP rate limiting (same windows as wish.js). IP comes from
+//       CF-Connecting-IP (injected by Cloudflare, not spoofable); local `wrangler pages
+//       dev` has no such header so all requests share the 'unknown' bucket — which makes
+//       verifying 429 locally easy. Windows are deliberately generous: a household behind
+//       one NAT IP still fits comfortably; this only stops non-tech people hammering the
+//       form, it is not anti-bot. Counting is global per IP (not per work) — invitations
+//       sharing one D1 share the quota.
+const RATE_WINDOWS = [
+  { max: 10, minutes: 60 },
+  { max: 50, minutes: 24 * 60 }
+]
+
+async function overRateLimit (db, table, ip) {
+  for (const { max, minutes } of RATE_WINDOWS) {
+    const { results } = await db
+      .prepare(`SELECT COUNT(*) AS n FROM ${table} WHERE ip = ? AND created_at > datetime('now', ?)`)
+      .bind(ip, `-${minutes} minutes`)
+      .all()
+    if ((results[0] && results[0].n) >= max) return true
+  }
+  return false
+}
+
 function json (body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -63,10 +91,15 @@ export async function onRequestPost (context) {
   const work = body.work == null ? '' : String(body.work).slice(0, 100)
   const title = String(body.title == null ? '' : body.title).slice(0, 200)
   const userAgent = (request.headers.get('User-Agent') || '').slice(0, 300)
+  const ip = request.headers.get('CF-Connecting-IP') || 'unknown'
+
+  if (await overRateLimit(env.DB, 'rsvps', ip)) {
+    return json({ ok: false, error: 'too many submissions from your address — please try again later' }, 429)
+  }
 
   await env.DB.prepare(
-    'INSERT INTO rsvps (work, title, data, user_agent) VALUES (?, ?, ?, ?)'
-  ).bind(work, title, JSON.stringify(data), userAgent).run()
+    'INSERT INTO rsvps (work, title, data, user_agent, ip) VALUES (?, ?, ?, ?, ?)'
+  ).bind(work, title, JSON.stringify(data), userAgent, ip).run()
 
   return json({ ok: true })
 }
